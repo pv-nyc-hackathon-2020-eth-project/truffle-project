@@ -11,4 +11,8 @@ contract CadabraCoin is ERC20 {
   function purchaseTokens(uint256 _amount) public {
     _transfer(defaultAddress, msg.sender, _amount);
   }
+
+  function returnTokens(uint256 _amount) public {
+    _transfer(msg.sender, defaultAddress, _amount);
+  }
 }
