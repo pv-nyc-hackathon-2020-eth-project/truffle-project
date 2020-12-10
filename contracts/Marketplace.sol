@@ -11,6 +11,11 @@ contract Marketplace {
     uint priceInCDBRA;
   }
 
+  struct purchasedItemStruct {
+    string item;
+    string passage;
+  }
+
   address public cadabraCoinAddress;
   uint numberOfItems;
   uint earningsInUSD;
@@ -18,6 +23,9 @@ contract Marketplace {
   uint currentCDBRADiscount;
   mapping(string => itemStruct) private itemsAndPricesMapping;
   mapping(uint => string) private itemNumberToItemName;
+  mapping(address => purchasedItemStruct[]) private addressToPurchases;
+
+  //address to item map expose a method
 
   constructor(address _cadabraCoinAddress) public {
     cadabraCoinAddress = _cadabraCoinAddress;
@@ -96,12 +104,21 @@ contract Marketplace {
     uint priceOfItemInUSD = itemsAndPricesMapping[_item].priceInUSD;
     uint priceOfItemInCDBRA = itemsAndPricesMapping[_item].priceInCDBRA;
     deductCDBRAFromPurchaserOfItem(priceOfItemInCDBRA);
+    addCustomer(msg.sender, _item, "sample passage");
     //Increment marketplace earnings in USD
     earningsInUSD = earningsInUSD + priceOfItemInUSD;
     //Update all of the item prices in CDBRA now that earnings have been incremented
     updateCDBRADiscount();
     updateItemPricesInCDBRA();
     return _item;
+  }
+
+  function addCustomer(address _address, string memory _item, string memory _passage) private {
+    addressToPurchases[_address].push(purchasedItemStruct({item: _item, passage: _passage}));
+  }
+
+  function getSenderPurchases() public view returns (purchasedItemStruct[] memory) {
+    return addressToPurchases[msg.sender];
   }
 
   function updateItemPricesInCDBRA() private {
