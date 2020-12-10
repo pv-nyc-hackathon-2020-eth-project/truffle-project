@@ -74,9 +74,10 @@ contract Marketplace {
     return allItemsAndPrices;
   }
 
-  function addItem(string memory _item, string memory _author, uint _priceInUSD) public {
+  function addItem(string memory _item, string memory _author, string memory _passage, uint _priceInUSD) public {
     uint priceOfItemInCDBRA = (_priceInUSD * 1000) - totalCDBRADiscount;
     itemsAndPricesMapping[_item] = itemStruct({item: _item, author: _author, priceInUSD: _priceInUSD, priceInCDBRA: priceOfItemInCDBRA});
+    itemToPassage[_item] = _passage;
     itemNumberToItemName[numberOfItems] = _item;
     numberOfItems++;
   }
