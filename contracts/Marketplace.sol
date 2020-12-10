@@ -1,48 +1,46 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import './MyToken.sol';
+import './CadabraCoin.sol';
 
 contract Marketplace {
 
   struct itemStruct {
     string item;
-    uint price;
+    uint priceInUSD;
+    uint priceInCDBRA;
   }
 
-  address public myTokenAddress;
+  address public cadabraCoinAddress;
   uint numberOfItems;
   uint earningsInUSD;
+  uint totalCDBRADiscount;
+  uint currentCDBRADiscount;
   mapping(string => itemStruct) private itemsAndPricesMapping;
   mapping(uint => string) private itemNumberToItemName;
-  mapping(string => uint) private itemToMostRecentPriceInMTK;
 
-  constructor(address _tokenAddress) public {
-    myTokenAddress = _tokenAddress;
+  constructor(address _cadabraCoinAddress) public {
+    cadabraCoinAddress = _cadabraCoinAddress;
 
-
-    itemsAndPricesMapping["item1"] = itemStruct({item: "item1", price: 10});
-    itemToMostRecentPriceInMTK["item1"] = 10 * 1000;
+    itemsAndPricesMapping["item1"] = itemStruct({item: "item1", priceInUSD: 10, priceInCDBRA: 10 * 1000});
     itemNumberToItemName[0] = "item1";
 
-    itemsAndPricesMapping["item2"] = itemStruct({item: "item2", price: 20});
-    itemToMostRecentPriceInMTK["item2"] = 20 * 1000;
+    itemsAndPricesMapping["item2"] = itemStruct({item: "item2", priceInUSD: 20, priceInCDBRA: 20 * 1000});
     itemNumberToItemName[1] = "item2";
 
-    itemsAndPricesMapping["item3"] = itemStruct({item: "item3", price: 30});
-    itemToMostRecentPriceInMTK["item3"] = 30 * 1000;
+    itemsAndPricesMapping["item3"] = itemStruct({item: "item3", priceInUSD: 30, priceInCDBRA: 30 * 1000});
     itemNumberToItemName[2] = "item3";
 
-    itemsAndPricesMapping["item4"] = itemStruct({item: "item4", price: 40});
-    itemToMostRecentPriceInMTK["item4"] = 40 * 1000;
+    itemsAndPricesMapping["item4"] = itemStruct({item: "item4", priceInUSD: 40, priceInCDBRA: 40 * 1000});
     itemNumberToItemName[3] = "item4";
 
-    itemsAndPricesMapping["item5"] = itemStruct({item: "item5", price: 50});
-    itemToMostRecentPriceInMTK["item5"] = 50 * 1000;
+    itemsAndPricesMapping["item5"] = itemStruct({item: "item5", priceInUSD: 50, priceInCDBRA: 50 * 1000});
     itemNumberToItemName[4] = "item5";
 
     numberOfItems = 5;
     earningsInUSD = 0;
+    totalCDBRADiscount = 0;
+    currentCDBRADiscount = 0;
   }
 
   function getNumberOfItems() public view returns (uint) {
@@ -53,7 +51,7 @@ contract Marketplace {
       return earningsInUSD;
   }
 
-  //get all items and prices as an array of itemStructs
+  //Get all items and their respective prices in USD and CDBRA
   function getAllItemsAndPrices() public view returns (itemStruct[] memory) {
     itemStruct[] memory allItemsAndPrices = new itemStruct[](numberOfItems);
     for (uint i = 0; i < numberOfItems; i++) {
@@ -63,47 +61,60 @@ contract Marketplace {
     return allItemsAndPrices;
   }
 
-  function setMyTokenAddress(address _myTokenAddress) public {
-    myTokenAddress = _myTokenAddress;
-  }
-
-  function addItem(string memory _item, uint _price) public {
-    itemsAndPricesMapping[_item] = itemStruct({item: _item, price: _price});
-    itemToMostRecentPriceInMTK[_item] = _price * 1000;
+  function addItem(string memory _item, uint _priceInUSD) public {
+    uint priceOfItemInCDBRA = (_priceInUSD * 1000) - totalCDBRADiscount;
+    itemsAndPricesMapping[_item] = itemStruct({item: _item, priceInUSD: _priceInUSD, priceInCDBRA: priceOfItemInCDBRA});
     itemNumberToItemName[numberOfItems] = _item;
     numberOfItems++;
   }
 
-  function getPriceOfItemInMTK(string memory _item) public view returns (uint) {
-    uint priceOfItemInUSD = itemsAndPricesMapping[_item].price;
-    uint priceOfItemInMTK;
+  function getUpdatedPriceOfItemInCDBRA(string memory _item) private view returns (uint) {
+    uint updatedPriceOfItemInCDBRA;
     if(earningsInUSD == 0) {
-      priceOfItemInMTK = priceOfItemInUSD * 1000;
+      uint priceOfItemInUSD = itemsAndPricesMapping[_item].priceInUSD;
+      updatedPriceOfItemInCDBRA = priceOfItemInUSD * 1000;
     }
     else {
-      uint mostRecentPriceInMTK = itemToMostRecentPriceInMTK[_item];
-      //this formula ensures that as earnings rise, prices for items in terms of
-      //MTK fall, but at a decelerating rate. This produces asymptotic behavior
+      uint mostRecentPriceOfItemInCDBRA = itemsAndPricesMapping[_item].priceInCDBRA;
+      //This formula ensures that as earnings rise, prices for items in terms of
+      //CDBRA fall, but at a decelerating rate. This produces asymptotic behavior
       //ensuring that the price of an item never falls to 0 (or below 0)
-      priceOfItemInMTK = mostRecentPriceInMTK - ((1 * 1000) / earningsInUSD);
+      updatedPriceOfItemInCDBRA = mostRecentPriceOfItemInCDBRA - currentCDBRADiscount;
     }
-    return priceOfItemInMTK;
+    return updatedPriceOfItemInCDBRA;
+  }
+
+  function updateCDBRADiscount() private {
+    currentCDBRADiscount = ((1 * 1000) / earningsInUSD);
+    //We keep track of totalCDBRADiscount to discount the CDBRA price of newly added items
+    //which did not have the opportunity to incrementally decrease their price as previous
+    //earnings increased
+    totalCDBRADiscount = totalCDBRADiscount + currentCDBRADiscount;
   }
 
   function purchaseItem(string memory _item) public returns (string memory) {
-    uint priceOfItemInUSD = itemsAndPricesMapping[_item].price;
-    uint priceOfItemInMTK = getPriceOfItemInMTK(_item);
-    deductMTKFromPurchaserOfItem(priceOfItemInMTK);
-    //update the most recent price of the item in MTK
-    itemToMostRecentPriceInMTK[_item] = priceOfItemInMTK;
-    //increment marketplace earnings in USD
+    uint priceOfItemInUSD = itemsAndPricesMapping[_item].priceInUSD;
+    uint priceOfItemInCDBRA = itemsAndPricesMapping[_item].priceInCDBRA;
+    deductCDBRAFromPurchaserOfItem(priceOfItemInCDBRA);
+    //Increment marketplace earnings in USD
     earningsInUSD = earningsInUSD + priceOfItemInUSD;
+    //Update all of the item prices in CDBRA now that earnings have been incremented
+    updateCDBRADiscount();
+    updateItemPricesInCDBRA();
     return _item;
   }
 
-  function deductMTKFromPurchaserOfItem(uint _priceOfItemInMTK) private {
-    MyToken myToken = MyToken(myTokenAddress);
-    //decrement the purchaser's MTK balance
-    myToken.transferFrom(msg.sender, myTokenAddress, _priceOfItemInMTK);
+  function updateItemPricesInCDBRA() private {
+    for (uint i = 0; i < numberOfItems; i++) {
+        string memory itemName = itemNumberToItemName[i];
+        itemsAndPricesMapping[itemName].priceInCDBRA = getUpdatedPriceOfItemInCDBRA(itemName);
+    }
+  }
+
+  function deductCDBRAFromPurchaserOfItem(uint _priceOfItemInCDBRA) private {
+    CadabraCoin cadabraCoin = CadabraCoin(cadabraCoinAddress);
+    //TO DO: add check to require that the purchaser has enough CDBRA
+    //Decrement the purchaser's CDBRA balance
+    cadabraCoin.transferFrom(msg.sender, cadabraCoinAddress, _priceOfItemInCDBRA);
   }
 }
