@@ -1,33 +1,64 @@
 pragma solidity ^0.6.0;
+pragma experimental ABIEncoderV2;
 
 import './MyToken.sol';
 
 contract Marketplace {
-  string[] public items;
-  uint256[] public prices;
+
+  struct itemStruct {
+    string item;
+    uint price;
+  }
+
   address myTokenAddress;
+  uint numberOfItems;
+  uint earningsInUSD;
+  mapping(string => itemStruct) public itemsAndPricesMapping;
+  mapping(uint => string) public itemNumberToItemName;
+  mapping(string => uint) public itemToMostRecentPriceInMTK;
 
   constructor() public {
-    items.push("item_1");
-    prices.push(10);
-    items.push("item_2");
-    prices.push(20);
+
+    itemsAndPricesMapping["item1"] = itemStruct({item: "item1", price: 10});
+    itemToMostRecentPriceInMTK["item1"] = 10 * 1000;
+    itemNumberToItemName[0] = "item1";
+
+    itemsAndPricesMapping["item2"] = itemStruct({item: "item2", price: 20});
+    itemToMostRecentPriceInMTK["item2"] = 20 * 1000;
+    itemNumberToItemName[1] = "item2";
+
+    itemsAndPricesMapping["item3"] = itemStruct({item: "item3", price: 30});
+    itemToMostRecentPriceInMTK["item3"] = 30 * 1000;
+    itemNumberToItemName[2] = "item3";
+
+    itemsAndPricesMapping["item4"] = itemStruct({item: "item4", price: 40});
+    itemToMostRecentPriceInMTK["item4"] = 40 * 1000;
+    itemNumberToItemName[3] = "item4";
+
+    itemsAndPricesMapping["item5"] = itemStruct({item: "item5", price: 50});
+    itemToMostRecentPriceInMTK["item5"] = 50 * 1000;
+    itemNumberToItemName[4] = "item5";
+
+    numberOfItems = 5;
+    earningsInUSD = 0;
   }
 
-  function getItem1() public view returns (string memory) {
-    return items[0];
+  function getNumberOfItems() public view returns (uint) {
+    return numberOfItems;
   }
 
-  function getPriceForItem1() public view returns (uint256) {
-    return prices[0];
+  function getEarningsInUSD() public view returns (uint) {
+      return earningsInUSD;
   }
 
-  function getItem2() public view returns (string memory) {
-    return items[1];
-  }
-
-  function getPriceForItem2() public view returns (uint256) {
-    return prices[1];
+  //get all items and prices as an array of itemStructs
+  function getAllItemsAndPrices() public view returns (itemStruct[] memory) {
+    itemStruct[] memory allItemsAndPrices = new itemStruct[](numberOfItems);
+    for (uint i = 0; i < numberOfItems; i++) {
+        string memory itemName = itemNumberToItemName[i];
+        allItemsAndPrices[i] = itemsAndPricesMapping[itemName];
+    }
+    return allItemsAndPrices;
   }
 
   function getMyTokenAddress() public view returns (address) {
@@ -38,19 +69,43 @@ contract Marketplace {
     myTokenAddress = _myTokenAddress;
   }
 
-  //This method does not seem to properly return the number of MyTokens associated
-  //with the marketplace's address, but given the revised implementation plan, it is
-  //likely not necessary
-  function getMarketplaceBalanceOfMyToken() public view returns (uint256) {
-    MyToken myToken = MyToken(myTokenAddress);
-    myToken.balanceOf(address(this));
+  function addItem(string memory _item, uint _price) public {
+    itemsAndPricesMapping[_item] = itemStruct({item: _item, price: _price});
+    itemToMostRecentPriceInMTK[_item] = _price * 1000;
+    itemNumberToItemName[numberOfItems] = _item;
+    numberOfItems++;
   }
 
-  //have a get method to return bytes32[] array of item names
-  //have a method to return array of associated prices
+  function getPriceOfItemInMTK(string memory _item) public view returns (uint) {
+    uint priceOfItemInUSD = itemsAndPricesMapping[_item].price;
+    uint priceOfItemInMTK;
+    if(earningsInUSD == 0) {
+      priceOfItemInMTK = priceOfItemInUSD * 1000;
+    }
+    else {
+      uint mostRecentPriceInMTK = itemToMostRecentPriceInMTK[_item];
+      //this formula ensures that as earnings rise, prices for items in terms of
+      //MTK fall, but at a decelerating rate. This produces asymptotic behavior
+      //ensuring that the price of an item never falls to 0 (or below 0) 
+      priceOfItemInMTK = mostRecentPriceInMTK - ((1 * 1000) / earningsInUSD);
+    }
+    return priceOfItemInMTK;
+  }
 
-  //delegate permission for marketplace to transfer Tokens
-  //then transfer tokens from msg.sender to address(myToken)
-  //this will decrement the msg.sender balance
-  //In addition make sure to increment the marketplace earnings in USD
+  function purchaseItem(string memory _item) public returns (string memory) {
+    uint priceOfItemInUSD = itemsAndPricesMapping[_item].price;
+    uint priceOfItemInMTK = getPriceOfItemInMTK(_item);
+    deductMTKFromPurchaserOfItem(priceOfItemInMTK);
+    //update the most recent price of the item in MTK
+    itemToMostRecentPriceInMTK[_item] = priceOfItemInMTK;
+    //increment marketplace earnings in USD
+    earningsInUSD = earningsInUSD + priceOfItemInUSD;
+    return _item;
+  }
+
+  function deductMTKFromPurchaserOfItem(uint _priceOfItemInMTK) private {
+    MyToken myToken = MyToken(myTokenAddress);
+    //decrement the purchaser's MTK balance
+    myToken.transferFrom(msg.sender, myTokenAddress, _priceOfItemInMTK);
+  }
 }
