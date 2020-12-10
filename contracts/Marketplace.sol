@@ -13,9 +13,9 @@ contract Marketplace {
   address myTokenAddress;
   uint numberOfItems;
   uint earningsInUSD;
-  mapping(string => itemStruct) public itemsAndPricesMapping;
-  mapping(uint => string) public itemNumberToItemName;
-  mapping(string => uint) public itemToMostRecentPriceInMTK;
+  mapping(string => itemStruct) private itemsAndPricesMapping;
+  mapping(uint => string) private itemNumberToItemName;
+  mapping(string => uint) private itemToMostRecentPriceInMTK;
 
   constructor() public {
 
@@ -86,7 +86,7 @@ contract Marketplace {
       uint mostRecentPriceInMTK = itemToMostRecentPriceInMTK[_item];
       //this formula ensures that as earnings rise, prices for items in terms of
       //MTK fall, but at a decelerating rate. This produces asymptotic behavior
-      //ensuring that the price of an item never falls to 0 (or below 0) 
+      //ensuring that the price of an item never falls to 0 (or below 0)
       priceOfItemInMTK = mostRecentPriceInMTK - ((1 * 1000) / earningsInUSD);
     }
     return priceOfItemInMTK;
