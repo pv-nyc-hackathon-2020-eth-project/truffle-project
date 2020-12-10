@@ -1,11 +1,27 @@
 import React, { Component } from "react";
-import SimpleStorageContract from "./contracts/SimpleStorage.json";
+import Token from "./contracts/MyToken.json";
+import Marketplace from "./contracts/Marketplace.json";
 import getWeb3 from "./getWeb3";
 
 import "./App.css";
 
+class Item {
+  constructor(name, priceInUSD) {
+    this.name = name;
+    this.priceInUSD = priceInUSD;
+  }
+}
+
 class App extends Component {
-  state = { storageValue: 0, web3: null, accounts: null, contract: null };
+  state = { 
+    web3: null, 
+    accounts: null, 
+    token: null, 
+    marketplace: null,
+    myAccount: null,
+    myTokens: null,
+    items: [], 
+  };
 
   componentDidMount = async () => {
     try {
@@ -17,15 +33,30 @@ class App extends Component {
 
       // Get the contract instance.
       const networkId = await web3.eth.net.getId();
-      const deployedNetwork = SimpleStorageContract.networks[networkId];
-      const instance = new web3.eth.Contract(
-        SimpleStorageContract.abi,
-        deployedNetwork && deployedNetwork.address,
+      const token = new web3.eth.Contract(
+        Token.abi,
+        Token.networks[networkId] && Token.networks[networkId].address,
       );
+
+      const marketplace = new web3.eth.Contract(
+        Marketplace.abi,
+        Marketplace.networks[networkId] && Marketplace.networks[networkId].address,
+      )
+
+      const rawItems = await marketplace.methods.getAllItemsAndPrices().call();
+      const items = rawItems.map(item => new Item(item[0], parseInt(item[1])))
+
+      // First account is always the current account; Should poll every x ms to update this.
+      const balance = await token.methods.balanceOf(accounts[0]).call();
+      console.log(`Current account is: ${accounts[0]}`);
+      console.log(`balance at app start: ${balance}`);
+      await token.methods.purhcaseTokens(1000).send({from: accounts[0]});
+      const newBalance = await token.methods.balanceOf(accounts[0]).call();
+      console.log(`balance after initial purchase: ${newBalance}`);
 
       // Set web3, accounts, and contract to the state, and then proceed with an
       // example of interacting with the contract's methods.
-      this.setState({ web3, accounts, contract: instance }, this.runExample);
+      this.setState({ web3, accounts, token, marketplace, items, myAccount: accounts[0], myTokens: newBalance }, this.runExample);
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -36,16 +67,8 @@ class App extends Component {
   };
 
   runExample = async () => {
-    const { accounts, contract } = this.state;
-
-    // Stores a given value, 5 by default.
-    await contract.methods.set(5).send({ from: accounts[0] });
-
-    // Get the value from the contract to prove it worked.
-    const response = await contract.methods.get().call();
-
-    // Update state with the result.
-    this.setState({ storageValue: response });
+    const { accounts, contract, token, marketplace, items } = this.state;
+    console.log(items);
   };
 
   render() {
@@ -54,17 +77,10 @@ class App extends Component {
     }
     return (
       <div className="App">
-        <h1>Good to Go!</h1>
-        <p>Your Truffle Box is installed and ready.</p>
-        <h2>Smart Contract Example</h2>
-        <p>
-          If your contracts compiled and migrated successfully, below will show
-          a stored value of 5 (by default).
-        </p>
-        <p>
-          Try changing the value stored on <strong>line 40</strong> of App.js.
-        </p>
-        <div>The stored value is: {this.state.storageValue}</div>
+        <div>My account {this.state.myAccount}</div>
+        <div>My tokens {this.state.myTokens}</div>
+        {this.state.items.map(item => 
+          <div>Item name: {item.name} and item price in USD: {item.priceInUSD}</div>)}
       </div>
     );
   }

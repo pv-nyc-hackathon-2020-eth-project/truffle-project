@@ -10,14 +10,16 @@ contract Marketplace {
     uint price;
   }
 
-  address myTokenAddress;
+  address public myTokenAddress;
   uint numberOfItems;
   uint earningsInUSD;
   mapping(string => itemStruct) private itemsAndPricesMapping;
   mapping(uint => string) private itemNumberToItemName;
   mapping(string => uint) private itemToMostRecentPriceInMTK;
 
-  constructor() public {
+  constructor(address _tokenAddress) public {
+    myTokenAddress = _tokenAddress;
+
 
     itemsAndPricesMapping["item1"] = itemStruct({item: "item1", price: 10});
     itemToMostRecentPriceInMTK["item1"] = 10 * 1000;
@@ -59,10 +61,6 @@ contract Marketplace {
         allItemsAndPrices[i] = itemsAndPricesMapping[itemName];
     }
     return allItemsAndPrices;
-  }
-
-  function getMyTokenAddress() public view returns (address) {
-    return myTokenAddress;
   }
 
   function setMyTokenAddress(address _myTokenAddress) public {
