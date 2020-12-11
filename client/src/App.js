@@ -64,7 +64,7 @@ class App extends Component {
       console.log(item, addr)
       if (addr === this.state.currentAccount) {
         const newBalance = await this.state.token.methods.balanceOf(this.state.currentAccount).call();
-        const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, this.state.currentAccountj);
+        const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, addr);
         this.setState({myTokens: newBalance, itemsPurchased, itemsNotPurchased});
       }
     });
@@ -135,6 +135,7 @@ class App extends Component {
     const allItems = rawItems.map(([itemId, author, usd, tokenCost]) => new Item(itemId, author, parseInt(usd), parseInt(tokenCost)));
     const itemsPurchased = (await marketplace.methods.getSenderPurchases().call({from: account})).map(({item, author, passage}) => new PurchasedItem(item, author, passage));
     console.log("debug")
+    console.log(account)
     console.log(itemsPurchased)
     const itemsNotPurchased = allItems.filter(item => !(itemsPurchased.map(({name, passage}) => name).includes(item.name))); 
     return [itemsPurchased, itemsNotPurchased];
