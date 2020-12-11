@@ -62,9 +62,9 @@ class App extends Component {
 
       const { item, addr } = payload;
       console.log(item, addr)
-      const newBalance = await this.state.token.methods.balanceOf(this.state.currentAccount).call();
-      const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, addr);
-      this.setState({myTokens: newBalance, itemsPurchased, itemsNotPurchased});
+        const newBalance = await this.state.token.methods.balanceOf(this.state.currentAccount).call();
+        const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, this.state.currentAccount);
+        this.setState({myTokens: newBalance, itemsPurchased, itemsNotPurchased});
     });
 
     this.state.marketplace.events.PassageAdded().on("data", async event => {
