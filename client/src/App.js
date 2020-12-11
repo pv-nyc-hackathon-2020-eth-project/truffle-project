@@ -62,11 +62,9 @@ class App extends Component {
 
       const { item, addr } = payload;
       console.log(item, addr)
-      if (addr === this.state.currentAccount) {
-        const newBalance = await this.state.token.methods.balanceOf(this.state.currentAccount).call();
-        const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, addr);
-        this.setState({myTokens: newBalance, itemsPurchased, itemsNotPurchased});
-      }
+      const newBalance = await this.state.token.methods.balanceOf(this.state.currentAccount).call();
+      const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, addr);
+      this.setState({myTokens: newBalance, itemsPurchased, itemsNotPurchased});
     });
 
     this.state.marketplace.events.PassageAdded().on("data", async event => {
@@ -233,7 +231,7 @@ class App extends Component {
             <label className="mx-2">Author</label>
             <input value={this.state.newPassageAuthor} onChange={e => this.setState({newPassageAuthor: e.target.value})}></input>
             <label className="mx-2">Price</label>
-            <input value={this.state.newPassagePriceInUSD} onChange={e => this.setState({newPassagePriceInUSD: parseInt(e.target.value)})}></input>
+            <input value={this.state.newPassagePriceInUSD} onChange={e => this.setState({newPassagePriceInUSD: e.target.value ? parseInt(e.target.value) : 0})}></input>
           </div>
           <div className="d-flex my-2"><textarea cols="100" rows="10" style={{height: "15em", width: "80vw"}} value={this.state.newPassageText} onChange={(e) => this.setState({newPassageText: e.target.value})} placeholder="Add your own passage here:"></textarea></div>
           <button onClick={this.submitNewItem}>Author it!</button>
