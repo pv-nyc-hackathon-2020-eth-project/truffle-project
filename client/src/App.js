@@ -64,13 +64,13 @@ class App extends Component {
       console.log(item, addr)
       if (addr === this.state.currentAccount) {
         const newBalance = await this.state.token.methods.balanceOf(this.state.currentAccount).call();
-        const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace);
+        const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, this.state.currentAccountj);
         this.setState({myTokens: newBalance, itemsPurchased, itemsNotPurchased});
       }
     });
 
     this.state.marketplace.events.PassageAdded().on("data", async event => {
-      const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace);
+      const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, this.state.currentAccount);
       this.setState({itemsPurchased, itemsNotPurchased});
     })
   }
@@ -80,8 +80,11 @@ class App extends Component {
       const accounts = await this.state.web3.eth.getAccounts(); 
       const currentAccount = accounts[0];
       if (currentAccount !== this.state.currentAccount) {
-        const balance = await this.state.token.methods.balanceOf(this.state.currentAccount).call();
-        this.setState({currentAccount, myTokens: balance});
+        const balance = await this.state.token.methods.balanceOf(currentAccount).call();
+        this.setState({myTokens: balance, currentAccount}, async () => {
+          const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, currentAccount);
+          this.setState({itemsPurchased, itemsNotPurchased});
+        });
       } 
     }, 300);
   }
@@ -106,7 +109,7 @@ class App extends Component {
       )
 
       //Mocking purchased / not yet purchased;
-      const [itemsPurchased, itemsNotPurchased] = await this.getItems(marketplace);
+      const [itemsPurchased, itemsNotPurchased] = await this.getItems(marketplace, currentAccount);
 
       this.setState({ 
         web3, 
@@ -120,7 +123,6 @@ class App extends Component {
         myTokens,
       }, this.setupEventListenersAndPollers);
     } catch (error) {
-      // Catch any errors for any of the above operations.
       alert(
         `Failed to load web3, accounts, or contract. Check console for details.`,
       );
@@ -128,12 +130,12 @@ class App extends Component {
     }
   };
 
-  getItems = async marketplace => {
+  getItems = async (marketplace, account) => {
     const rawItems = await marketplace.methods.getAllItemsAndPrices().call();
     const allItems = rawItems.map(([itemId, author, usd, tokenCost]) => new Item(itemId, author, parseInt(usd), parseInt(tokenCost)));
-    const itemsPurchased = (await marketplace.methods.getSenderPurchases().call()).map(({item, author, passage}) => new PurchasedItem(item, author, passage));
+    const itemsPurchased = (await marketplace.methods.getSenderPurchases().call({from: account})).map(({item, author, passage}) => new PurchasedItem(item, author, passage));
     console.log("debug")
-    console.log(await marketplace.methods.getSenderPurchases().call())
+    console.log(itemsPurchased)
     const itemsNotPurchased = allItems.filter(item => !(itemsPurchased.map(({name, passage}) => name).includes(item.name))); 
     return [itemsPurchased, itemsNotPurchased];
   }
@@ -166,7 +168,7 @@ class App extends Component {
   submitNewItem = async (e) => {
     const {marketplace, newPassageTitle, newPassageAuthor, newPassageText, newPassagePriceInUSD} = this.state;
     this.executeContractMethod(marketplace.methods.addItem, newPassageTitle, newPassageAuthor, newPassageText, newPassagePriceInUSD);
-    const [itemsPurchased, itemsNotPurchased] = await this.getItems(marketplace);
+    const [itemsPurchased, itemsNotPurchased] = await this.getItems(marketplace, this.state.currentAccount);
     this.setState({newPassageTitle: "", newPassageText: "", newPassagePriceInUSD: 0, itemsPurchased, itemsNotPurchased})
   }
 
@@ -197,8 +199,10 @@ class App extends Component {
 
           {this.state.itemsPurchased[this.state.passageSelected] ? <Modal show={this.state.displayModal} onHide={() => this.setState({displayModal: false})}>
             <Modal.Header closeButton>
-              <Modal.Title>{this.state.itemsPurchased[this.state.passageSelected].name}</Modal.Title>
-              <div>{this.state.itemsPurchased[this.state.passageSelected].author}</div>
+              <Modal.Title>
+                <p>{this.state.itemsPurchased[this.state.passageSelected].name}</p>
+                <div style={{fontSize: "0.6em"}}>{this.state.itemsPurchased[this.state.passageSelected].author}</div>
+              </Modal.Title>
             </Modal.Header>
             <Modal.Body>
               {this.state.itemsPurchased[this.state.passageSelected].passage}
