@@ -14,6 +14,7 @@ contract Marketplace {
 
   struct purchasedItemStruct {
     string item;
+    string author;
     string passage;
   }
 
@@ -109,8 +110,9 @@ contract Marketplace {
   function purchaseItem(string memory _item) public returns (string memory) {
     uint priceOfItemInUSD = itemsAndPricesMapping[_item].priceInUSD;
     uint priceOfItemInCDBRA = itemsAndPricesMapping[_item].priceInCDBRA;
+    string memory itemAuthor = itemsAndPricesMapping[_item].author;
     deductCDBRAFromPurchaserOfItem(priceOfItemInCDBRA);
-    addCustomer(msg.sender, _item, itemToPassage[_item]);
+    addCustomerPurchase(msg.sender, _item, itemAuthor, itemToPassage[_item]);
     //Increment marketplace earnings in USD
     earningsInUSD = earningsInUSD + priceOfItemInUSD;
     //Update all of the item prices in CDBRA now that earnings have been incremented
@@ -119,8 +121,8 @@ contract Marketplace {
     return _item;
   }
 
-  function addCustomer(address _address, string memory _item, string memory _passage) private {
-    addressToPurchases[_address].push(purchasedItemStruct({item: _item, passage: _passage}));
+  function addCustomerPurchase(address _address, string memory _item, string memory _author, string memory _passage) private {
+    addressToPurchases[_address].push(purchasedItemStruct({item: _item, author: _author, passage: _passage}));
   }
 
   function getSenderPurchases() public view returns (purchasedItemStruct[] memory) {
