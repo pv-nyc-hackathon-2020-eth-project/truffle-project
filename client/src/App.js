@@ -27,16 +27,16 @@ class PurchasedItem {
 }
 
 class App extends Component {
-  state = { 
-    web3: null, 
+  state = {
+    web3: null,
     currentAccount: null,
-    token: null, 
+    token: null,
     tokenSymbol: null,
     tokenAddress: null,
     marketplace: null,
     myTokens: null,
     itemsPurchased: [],
-    itemsNotPurchased: [], 
+    itemsNotPurchased: [],
     tokensToPurchase: 0,
     tokensToReturn: 0,
     newPassageTitle: "",
@@ -75,7 +75,7 @@ class App extends Component {
 
   pollForAccountSwitch = async () => {
     setInterval(async () => {
-      const accounts = await this.state.web3.eth.getAccounts(); 
+      const accounts = await this.state.web3.eth.getAccounts();
       const currentAccount = accounts[0];
       if (currentAccount !== this.state.currentAccount) {
         const balance = await this.state.token.methods.balanceOf(currentAccount).call();
@@ -83,7 +83,7 @@ class App extends Component {
           const [itemsPurchased, itemsNotPurchased] = await this.getItems(this.state.marketplace, currentAccount);
           this.setState({itemsPurchased, itemsNotPurchased});
         });
-      } 
+      }
     }, 300);
   }
 
@@ -109,15 +109,15 @@ class App extends Component {
       //Mocking purchased / not yet purchased;
       const [itemsPurchased, itemsNotPurchased] = await this.getItems(marketplace, currentAccount);
 
-      this.setState({ 
-        web3, 
-        currentAccount, 
-        token, 
+      this.setState({
+        web3,
+        currentAccount,
+        token,
         tokenSymbol,
-        marketplaceAddress, 
-        marketplace, 
-        itemsPurchased, 
-        itemsNotPurchased, 
+        marketplaceAddress,
+        marketplace,
+        itemsPurchased,
+        itemsNotPurchased,
         myTokens,
       }, this.setupEventListenersAndPollers);
     } catch (error) {
@@ -135,13 +135,13 @@ class App extends Component {
     console.log("debug")
     console.log(account)
     console.log(itemsPurchased)
-    const itemsNotPurchased = allItems.filter(item => !(itemsPurchased.map(({name, passage}) => name).includes(item.name))); 
+    const itemsNotPurchased = allItems.filter(item => !(itemsPurchased.map(({name, passage}) => name).includes(item.name)));
     return [itemsPurchased, itemsNotPurchased];
   }
 
   purchaseItem = async (itemId, costInTokens) => {
     const {token, marketplace, marketplaceAddress} = this.state;
-    await token.methods.approve(marketplaceAddress, costInTokens).send({from: this.state.currentAccount}); 
+    await token.methods.approve(marketplaceAddress, costInTokens).send({from: this.state.currentAccount});
     this.executeContractMethod(marketplace.methods.purchaseItem, itemId);
   }
 
@@ -211,16 +211,16 @@ class App extends Component {
             </Modal.Footer>
           </Modal> : <div></div>}
 
-          <div style={{textAlign: "left"}}>View your passages.</div>
-          <ItemsPurchasedCarousel 
+          <div style={{textAlign: "left"}}>View your passages:</div>
+          <ItemsPurchasedCarousel
             readButtonClickHandler={(i) => this.setState({displayModal: true, passageSelected: i})}
             itemsPurchased={this.state.itemsPurchased}>
-          </ItemsPurchasedCarousel> 
+          </ItemsPurchasedCarousel>
 
-          <div style={{textAlign: "left"}}>Passages available for purchase.</div>
-          <ItemsNotPurchasedCarousel 
-            tokenSymbol={this.state.tokenSymbol} 
-            itemsNotPurchased={this.state.itemsNotPurchased} 
+          <div style={{textAlign: "left"}}>Passages available for purchase:</div>
+          <ItemsNotPurchasedCarousel
+            tokenSymbol={this.state.tokenSymbol}
+            itemsNotPurchased={this.state.itemsNotPurchased}
             onClickHandler={this.purchaseItem}>
           </ItemsNotPurchasedCarousel>
 
@@ -242,12 +242,12 @@ class App extends Component {
 }
 
 const ItemsPurchasedCarousel = ({itemsPurchased, readButtonClickHandler}) => (
-    <Carousel 
+    <Carousel
       responsive={{all: {breakpoint: {max: 3000, min: 1}, items: 3}}}
       className="mb-4"
       itemClass="mx-2"
     >
-      {itemsPurchased.map((item, i) => 
+      {itemsPurchased.map((item, i) =>
         <Card className="border border-dark" style={{width: "15em"}}>
           <Card.Body>
             <Card.Title>{item.name}</Card.Title>
@@ -259,21 +259,21 @@ const ItemsPurchasedCarousel = ({itemsPurchased, readButtonClickHandler}) => (
   )
 
   const ItemsNotPurchasedCarousel = ({itemsNotPurchased, onClickHandler, tokenSymbol}) => (
-    <Carousel 
+    <Carousel
       responsive={{all: {breakpoint: {max: 3000, min: 1}, items: 3}}}
       className="mb-4"
       itemClass="mx-2"
     >
-    {itemsNotPurchased.map(item => 
+    {itemsNotPurchased.map(item =>
       <Card className="border border-dark" style={{width: "15em"}}>
         <Card.Body>
           <Card.Title>{item.name}</Card.Title>
-          <Card.Subtitle>{item.author}</Card.Subtitle> 
-          <Card.Text>${item.priceInUSD} | {item.priceInCDBRA} {tokenSymbol}</Card.Text> 
+          <Card.Subtitle>{item.author}</Card.Subtitle>
+          <Card.Text>${item.priceInUSD} | {item.priceInCDBRA} {tokenSymbol}</Card.Text>
           <Button variant="outline-success" onClick={() => onClickHandler(item.name, item.priceInCDBRA)}>Purchase</Button>
         </Card.Body>
       </Card>)}
-  </Carousel> 
+  </Carousel>
   )
 
 export default App;
