@@ -31,23 +31,23 @@ contract Marketplace {
   constructor(address _cadabraCoinAddress) public {
     cadabraCoinAddress = _cadabraCoinAddress;
 
-    itemsAndPricesMapping["The Swimmer"] = itemStruct({item: "The Swimmer", author: "John Cheever", priceInUSD: 1, priceInCDBRA: 1 * 1000});
+    itemsAndPricesMapping["The Swimmer"] = itemStruct({item: "The Swimmer", author: "John Cheever", priceInUSD: 3, priceInCDBRA: 3 * 1000});
     itemNumberToItemName[0] = "The Swimmer";
     itemToPassage["The Swimmer"] = "Then there was a fine noise of rushing water from the crown of an oak at his back, as if a spigot there had been turned. Then the noise of fountains came from the crowns of all the tall trees. Why did he love storms, what was the meaning of his excitement when the door sprang open and the rain wind fled rudely up the stair, why had the simple task of shutting the windows of an old house seem fitting and urgent, why did the first watery notes of a storm wind have for him the unmistakable sound of good news, cheer, glad tidings?";
 
-    itemsAndPricesMapping["The Great Gatsby"] = itemStruct({item: "The Great Gatsby", author: "F. Scott Fitzgerald", priceInUSD: 2, priceInCDBRA: 2 * 1000});
+    itemsAndPricesMapping["The Great Gatsby"] = itemStruct({item: "The Great Gatsby", author: "F. Scott Fitzgerald", priceInUSD: 4, priceInCDBRA: 4 * 1000});
     itemNumberToItemName[1] = "The Great Gatsby";
     itemToPassage["The Great Gatsby"] = "And as I sat there brooding on the old, unknown world, I thought of Gatsby’s wonder when he first picked out the green light at the end of Daisy’s dock. He had come a long way to this blue lawn, and his dream must have seemed so close that he could hardly fail to grasp it. He did not know that it was already behind him, somewhere back in that vast obscurity beyond the city, where the dark fields of the republic rolled on under the night.";
 
-    itemsAndPricesMapping["Fahrenheit 451"] = itemStruct({item: "Fahrenheit 451", author: "Ray Bradbury", priceInUSD: 3, priceInCDBRA: 3 * 1000});
+    itemsAndPricesMapping["Fahrenheit 451"] = itemStruct({item: "Fahrenheit 451", author: "Ray Bradbury", priceInUSD: 5, priceInCDBRA: 5 * 1000});
     itemNumberToItemName[2] = "Fahrenheit 451";
     itemToPassage["Fahrenheit 451"] = "Books were only one type of receptacle where we stored a lot of things we were afraid we might forget. There is nothing magical in them, at all. The magic is only in what books say, how they stitched the patches of the universe together into one garment for us.";
 
-    itemsAndPricesMapping["To Kill a Mockingbird"] = itemStruct({item: "To Kill a Mockingbird", author: "Harper Lee", priceInUSD: 4, priceInCDBRA: 4 * 1000});
+    itemsAndPricesMapping["To Kill a Mockingbird"] = itemStruct({item: "To Kill a Mockingbird", author: "Harper Lee", priceInUSD: 6, priceInCDBRA: 6 * 1000});
     itemNumberToItemName[3] = "To Kill a Mockingbird";
     itemToPassage["To Kill a Mockingbird"] = "Atticus said to Jem one day, “I’d rather you shot at tin cans in the back yard, but I know you’ll go after birds. Shoot all the bluejays you want, if you can hit ‘em, but remember it’s a sin to kill a mockingbird.” That was the only time I ever heard Atticus say it was a sin to do something, and I asked Miss Maudie about it. “Your father’s right,” she said. “Mockingbirds don’t do one thing but make music for us to enjoy. They don’t eat up people’s gardens, don’t nest in corncribs, they don’t do one thing but sing their hearts out for us. That’s why it’s a sin to kill a mockingbird.”";
 
-    itemsAndPricesMapping["Of Mice and Men"] = itemStruct({item: "Of Mice and Men", author: "John Steinbeck", priceInUSD: 5, priceInCDBRA: 5 * 1000});
+    itemsAndPricesMapping["Of Mice and Men"] = itemStruct({item: "Of Mice and Men", author: "John Steinbeck", priceInUSD: 7, priceInCDBRA: 7 * 1000});
     itemNumberToItemName[4] = "Of Mice and Men";
     itemToPassage["Of Mice and Men"] = "As happens sometimes, a moment settled and hovered and remained for much more than a moment. And sound stopped and movement stopped for much, much more than a moment.";
 
