@@ -266,7 +266,7 @@ const ItemsPurchasedCarousel = ({itemsPurchased, readButtonClickHandler}) => (
         <Card.Body>
           <Card.Title>{item.name}</Card.Title>
           <Card.Subtitle>{item.author}</Card.Subtitle> 
-          <Card.Text>${item.priceInUSD} | {tokenSymbol} {item.priceInCDBRA}</Card.Text> 
+          <Card.Text>${item.priceInUSD} | {item.priceInCDBRA} {tokenSymbol}</Card.Text> 
           <Button variant="outline-success" onClick={() => onClickHandler(item.name, item.priceInCDBRA)}>Purchase</Button>
         </Card.Body>
       </Card>)}
